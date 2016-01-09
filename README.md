@@ -1,2 +1,2 @@
 # flasktaskr
-taskr tutorial form realpython2
+taskr tutorial from realpython2
