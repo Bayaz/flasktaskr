@@ -51,6 +51,8 @@ def login():
 
     return render_template('login.html')
 
+#query database for open and closed tasks and assign them variables to
+# populate open and closed tasks lists
 @app.route('/tasks/')
 @login_required
 def tasks():
@@ -78,3 +80,53 @@ def tasks():
         open_tasks=open_tasks,
         closed_tasks=closed_tasks
     )
+
+#add new tasks
+@app.route('/add/', methods = ['POST'])
+@login_required
+def new_task():
+    g.db = connect_db()
+    name = request.form['name']
+    date = request.form['due_date']
+    priority = request.form['priority']
+    if not name not date or not priority:
+        flash("All fields are required....try again!")
+        return redirect(url_for('tasks'))
+    else:
+        g.db.execute('insert into tasks(name, due_date, priority, status) \
+            values(?, ?, ?, 1)', [
+                request.form['name'],
+                request.form['due_date'],
+                request.form['priority']
+            ]
+        )
+        g.db.commit()
+        g.db.close()
+        flash("New enty was successfully posted, THANKS!")
+        return redirect(url_for('tasks'))
+
+#mark tasks as complete
+@app.route('/complete<int:task_id>/')
+@login_required
+def complete(task_id):
+    g.db = connect.db()
+    g.db.execute(
+        'update tasks set status = 0 where task_id='+str(task_id))
+    )
+    g.db.commit()
+    g.db.close()
+    flash("The task was marked as complete!")
+    return redirect(url_for('tasks'))
+
+#delete tasks
+@app.route('/delete<int:task_id>/')
+@login_required
+def delete_entry(task_id):
+    g.db = connect.db()
+    g.db.execute('delete from tasks where task_id='+str(task_id))
+    g.db.commit()
+    g.db.close()
+    flash("The task was deleted!")
+    return redirect(url_for('tasks'))
+    
+
