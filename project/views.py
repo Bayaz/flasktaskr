@@ -6,6 +6,8 @@ from functools import wraps
 from flask import Flask, flash, redirect, render_template, \
     request, session, url_for, g
 
+from forms import AddTaskForm
+
 #config
 
 app = Flask(__name__)
@@ -58,16 +60,14 @@ def login():
 def tasks():
     g.db = connect_db()
     cur = g.db.execute(
-        'select name, due_date, priority, task_id, from tasks where\
-        status=1'
+        'select name, due_date, priority, task_id from tasks where status=1'
     )
     open_tasks = [
         dict(name=row[0], due_date=row[1], priority=row[2], \
             task_id=row[3]) for row in cur.fetchall()
     ]
     cur = g.db.execute(
-        'select name, due_date, priority, task_id, from tasks where\
-        status=0'
+        'select name, due_date, priority, task_id from tasks where status=0'
     )
     closed_tasks = [
         dict(name=row[0], due_date=row[1], priority=row[2], \
@@ -89,7 +89,7 @@ def new_task():
     name = request.form['name']
     date = request.form['due_date']
     priority = request.form['priority']
-    if not name not date or not priority:
+    if not name or not date or not priority:
         flash("All fields are required....try again!")
         return redirect(url_for('tasks'))
     else:
@@ -109,9 +109,9 @@ def new_task():
 @app.route('/complete<int:task_id>/')
 @login_required
 def complete(task_id):
-    g.db = connect.db()
+    g.db = connect_db()
     g.db.execute(
-        'update tasks set status = 0 where task_id='+str(task_id))
+        'update tasks set status = 0 where task_id='+str(task_id)
     )
     g.db.commit()
     g.db.close()
@@ -122,11 +122,11 @@ def complete(task_id):
 @app.route('/delete<int:task_id>/')
 @login_required
 def delete_entry(task_id):
-    g.db = connect.db()
+    g.db = connect_db()
     g.db.execute('delete from tasks where task_id='+str(task_id))
     g.db.commit()
     g.db.close()
     flash("The task was deleted!")
     return redirect(url_for('tasks'))
-    
+
 
